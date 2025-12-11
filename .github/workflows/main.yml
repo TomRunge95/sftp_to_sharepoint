@@ -1,0 +1,49 @@
+name: sftp to onedrive
+on:
+  schedule:
+    # Läuft täglich um 14 uhr
+    - cron: "0 14 * * *"
+  workflow_dispatch:
+
+jobs:
+  run-alert:
+    runs-on: ubuntu-latest
+
+    env:
+      TENANT_ID: ${{ secrets.TENANT_ID }}
+      APP_ID: ${{ secrets.APP_ID }}
+      SECRET_ID: ${{ secrets.SECRET_ID }}
+      DATA_PW: ${{ secrets.DATA_PW }}
+      BASE_FOLDER: ${{ secrets.BASE_FOLDER }}
+      SFTP_URL: ${{ secrets.SFTP_URL }}
+      EMAIL: ${{ secrets.EMAIL }}
+    
+
+
+
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Enable r2u (binary CRAN packages)
+        run: |
+          sudo bash -c 'echo "deb [signed-by=/usr/share/keyrings/cran-archive-keyring.gpg] \
+          https://r2u.rstudio.com/ubuntu jammy/main/" > /etc/apt/sources.list.d/cran-r2u.list'
+          curl -fsSL https://r2u.rstudio.com/ubuntu/cran-archive-keyring.gpg | \
+            sudo tee /usr/share/keyrings/cran-archive-keyring.gpg > /dev/null
+
+          sudo apt-get update
+
+      - name: Install R + binary R packages from r2u
+        run: |
+          sudo apt-get install -y --no-install-recommends \
+            r-base \
+            r-cran-httr \
+            r-cran-AzureAuth \
+            r-cran-jsonlite \
+            r-cran-curl \
+            
+      - name: Run Script
+        run: |
+          Rscript script.R
